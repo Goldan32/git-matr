@@ -34,6 +34,9 @@ def parse_args():
 
     _ = subparsers.add_parser("push", help="Update remote refs along with associated objects")
 
+    checkout_parser = subparsers.add_parser("checkout", help='git checkout')
+    checkout_parser.add_argument("branch", help="Branch to checkout")
+
     return parser.parse_args()
 
 class GitExecutor:
@@ -56,12 +59,17 @@ class GitExecutor:
                 self.add_and_commit(args.message)
             case "push":
                 self.push()
+            case "checkout":
+                self.checkout(args.branch)
 
     def add_and_commit(self, message):
         self._exec([["add", "."], ["commit", "-m", f"{message}"]])
 
     def push(self):
         self._exec([["push"]])
+
+    def checkout(self, branch):
+        self._exec([["checkout", f"{branch}"]])
 
 
 if __name__ == "__main__":
