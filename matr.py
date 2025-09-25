@@ -3,7 +3,7 @@
 import subprocess
 import os
 import argparse
-from typing import List
+from typing import List, Callable
 
 def main():
     ls = []
@@ -37,21 +37,34 @@ def parse_args():
     checkout_parser = subparsers.add_parser("checkout", help='git checkout')
     checkout_parser.add_argument("branch", help="Branch to checkout")
 
+    _ = subparsers.add_parser("status", help='git status')
+
+
     return parser.parse_args()
 
 class GitExecutor:
     def __init__(self, configs: List):
         self.configs = configs
 
-    def _exec(self, params: List[List[str]]):
+    def _exec(self,
+              params: List[List[str]], 
+              pre: Callable[[dict], None] = lambda x: None,
+              post: Callable[[dict], None] = lambda x: None,
+        ):
+        cb_args = {
+            "dir": "",
+        }
         commands = []
         for p in params:
             cmd = ["git"]
             cmd.extend(p)
             commands.append(cmd)
         for dir in self.configs:
+            cb_args["dir"] = dir
+            pre(cb_args)
             for c in commands:
                 subprocess.run(c, cwd=dir)
+            post(cb_args)
 
     def run(self, args):
         match args.command:
@@ -61,6 +74,8 @@ class GitExecutor:
                 self.push()
             case "checkout":
                 self.checkout(args.branch)
+            case "status":
+                self.status()
 
     def add_and_commit(self, message):
         self._exec([["add", "."], ["commit", "-m", f"{message}"]])
@@ -70,6 +85,13 @@ class GitExecutor:
 
     def checkout(self, branch):
         self._exec([["checkout", f"{branch}"]])
+
+    def status(self):
+        def pre(x):
+            print(f"{x["dir"]}:")
+        def post(x):
+            print("")
+        self._exec([["status", "--short", "--branch"]], pre=pre, post=post)
 
 
 if __name__ == "__main__":
