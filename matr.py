@@ -39,6 +39,7 @@ def parse_args():
 
     _ = subparsers.add_parser("status", help='git status')
 
+    _ = subparsers.add_parser("amend", help='git add . && git commit --amend --no-edit')
 
     return parser.parse_args()
 
@@ -76,6 +77,8 @@ class GitExecutor:
                 self.checkout(args.branch)
             case "status":
                 self.status()
+            case "amend":
+                self.amend()
 
     def add_and_commit(self, message):
         self._exec([["add", "."], ["commit", "-m", f"{message}"]])
@@ -93,6 +96,8 @@ class GitExecutor:
             print("")
         self._exec([["status", "--short", "--branch"]], pre=pre, post=post)
 
+    def amend(self):
+        self._exec([["add", "."], ["commit", "--amend", "--no-edit"]])
 
 if __name__ == "__main__":
     main()
