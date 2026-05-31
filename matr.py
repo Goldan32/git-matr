@@ -41,6 +41,8 @@ def parse_args():
 
     _ = subparsers.add_parser("amend", help='git add . && git commit --amend --no-edit')
 
+    _ = subparsers.add_parser("diff", help='git diff')
+
     pull_parser = subparsers.add_parser("pull", help='git pull')
     pull_parser.add_argument("-f", "--force", dest="force", action="store_true", help="git reset --hard origin/$(git bs)")
 
@@ -78,12 +80,14 @@ class GitExecutor:
                 self.push()
             case "checkout":
                 self.checkout(args.branch)
-            case "status":
+            case "status" | "s":
                 self.status()
             case "amend":
                 self.amend()
             case "pull":
                 self.pull(args.force)
+            case "diff":
+                self.diff()
 
     def add_and_commit(self, message):
         self._exec([["add", "."], ["commit", "-m", f"{message}"]])
@@ -109,6 +113,13 @@ class GitExecutor:
             self._exec([["reset", "--hard", "@{u}"]])
         else:
             self._exec([["pull"]])
+    
+    def diff(self):
+        def pre(x):
+            print(f"{x["dir"]}:")
+        def post(x):
+            print("")
+        self._exec([["diff"]], pre=pre, post=post)
 
 if __name__ == "__main__":
     main()
